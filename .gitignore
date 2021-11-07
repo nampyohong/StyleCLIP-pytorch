@@ -1,4 +1,7 @@
+*.swp
 *.ipynb
 *.pyc
 *.pkl
 *.dat
+test/
+tmp/
