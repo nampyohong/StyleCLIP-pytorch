@@ -5,6 +5,9 @@ StyleCLIP-PyTorch: Text-Driven Manipulation of StyleGAN Imagery
 stylegan2-ada-pytorch
 - https://github.com/NVlabs/stylegan2-ada-pytorch
 
+CLIP
+- https://github.com/openai/CLIP.git
+
 StyleCLIP(tensorflow)
 - https://github.com/orpatashnik/StyleCLIP
 
