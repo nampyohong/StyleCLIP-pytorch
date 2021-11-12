@@ -2,42 +2,44 @@ StyleCLIP-PyTorch: Text-Driven Manipulation of StyleGAN Imagery
 + PTI (Pivot Tuning Inversion)
 
 
-stylegan2-ada-pytorch
+--------------
+References
+
+1. stylegan2-ada-pytorch
 - https://github.com/NVlabs/stylegan2-ada-pytorch
 
-CLIP
+2. CLIP
 - https://github.com/openai/CLIP.git
 
-StyleCLIP(tensorflow)
+3. StyleCLIP(tensorflow)
 - https://github.com/orpatashnik/StyleCLIP
 
-Pivot Tuning Inversion
+4. Pivot Tuning Inversion
 - https://github.com/danielroich/PTI
 
 
-Image Input : PIL, CLIP image encoder
-Text Input : CLIP text encoder
-
-Image Invert
+--------------
+Invert Image
 - W space optimization
 - W+ space optimization
-- Pivot tuning inversion
-    - Style based generator tuning
+- Pivot tuning inversion (TODO)
+    - Tuning after style space
 
 Style Extractor
-- mapper from latent to style
 - from latent W/W+ space to S/S+ space
 - generate synth image from style space
 
-Direction Extractor (pytorch)
-- Style Direction Extractor
-    - SingleChannel.py in original tf repo
-    - implement dataset
-    - implement dataloader
-- Text Direction Extractor
-    - apply prompt engineering for face manipulation
+Manipulator
+- Global style direction extractor
+- Style manipulator
 
-Test Pipeline
+Get style direction from CLIP text space
+- Text Direction Extractor
+    - prompt engineering for face manipulation
+- mapper for combining multimodal style by beta threshold
+
+Test Pipeline (TODO)
+
 
 --------------
 Overall Flow
