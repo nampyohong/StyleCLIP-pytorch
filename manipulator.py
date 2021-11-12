@@ -32,10 +32,9 @@ class Manipulator():
     edited_images : List[(num_images, 3, 1024, 1024)]
     """
     def __init__(self, G, device, lst_alpha, num_images, start_ind=0):
-        """
-        Initialize 
-        use pre-saved generated latent/style from random Z
-        to use projection, used method "set_real_img_projection"
+        """Initialize 
+        - use pre-saved generated latent/style from random Z
+        - to use projection, used method "set_real_img_projection"
         """
         assert start_ind + num_images < 2000
         self.W = torch.load('tensor/W.pt')
@@ -82,12 +81,15 @@ class Manipulator():
         allowed_extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
         pass
 
-    def edit(self, delta_style):
+    def manipulate(self, delta_s):
         """Edit style by given delta_style
+        - use perturbation (delta s) * (alpha) as a boundary
         """
-        pass
+        breakpoint()
+        styles = []
+        return styles
 
-    def edit_one_channel(self, layer, channel_ind:int):
+    def manipulate_one_channel(self, layer, channel_ind:int):
         """Edit style from given layer, channel index
         - use mean value of pre-saved style
         - use perturbation (pre-saved style std) * (alpha) as a boundary
@@ -102,7 +104,7 @@ class Manipulator():
         
         perturbation = (torch.Tensor(self.lst_alpha) * boundary).numpy().tolist()
        
-        # apply edit 
+        # apply one channel manipulation
         for img_ind in range(self.num_images):
             for edit_ind, delta_s in enumerate(perturbation):
                 styles[edit_ind][layer][img_ind][channel_ind] += delta_s
@@ -150,7 +152,7 @@ def extract_global_direction(G, device, lst_alpha, num_images):
         print(f'\nStyle manipulation in layer "{layer}"')
         channel_num = manipulator.styles[layer].shape[1]
         for channel_ind in tqdm(range(channel_num), total=channel_num):
-            styles = manipulator.edit_one_channel(layer, channel_ind)
+            styles = manipulator.manipulate_one_channel(layer, channel_ind)
             # 2 * 100 images
             batchsize = 10
             nbatch = int(100 / batchsize)
@@ -181,7 +183,7 @@ def extract_global_direction(G, device, lst_alpha, num_images):
     fs3=fs3.mean(axis=1)
     fs3=fs3/np.linalg.norm(fs3,axis=-1)[:,None]
 
-    np.save('tensor/fs3.npy', fs3)
+    np.save('tensor/fs3.npy', fs3) # global style direction
 
 
 if __name__ == '__main__':
@@ -204,7 +206,7 @@ if __name__ == '__main__':
         layer = G.style_layers[6]
         channel_ind = 501
         manipulator = Manipulator(G, device, lst_alpha, num_images)
-        styles = manipulator.edit_one_channel(layer, channel_ind)
+        styles = manipulator.manipulate_one_channel(layer, channel_ind)
         start_ind, end_ind= 0, 10
         imgs = manipulator.synthesis_from_styles(styles, start_ind, end_ind)
         print(len(imgs), imgs[0].shape)
