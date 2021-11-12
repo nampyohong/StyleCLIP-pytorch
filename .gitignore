@@ -6,3 +6,4 @@
 *.dat
 test/
 tmp/
+tensor/fs3_.npy

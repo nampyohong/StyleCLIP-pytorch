@@ -11,7 +11,7 @@ References
 2. CLIP
 - https://github.com/openai/CLIP.git
 
-3. StyleCLIP(tensorflow)
+3. StyleCLIP(tensorflow, ORIGINAL REPO)
 - https://github.com/orpatashnik/StyleCLIP
 
 4. Pivot Tuning Inversion

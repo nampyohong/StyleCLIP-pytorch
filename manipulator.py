@@ -1,7 +1,6 @@
 import argparse
 import copy
 import os
-from pprint import pprint
 from tqdm import tqdm
 
 import numpy as np
@@ -9,8 +8,6 @@ import PIL.Image
 import torch
 
 import clip
-import dnnlib
-import legacy
 from wrapper import Generator
 
 
@@ -48,7 +45,7 @@ class Manipulator():
 
         self.S = {layer: self.S[layer].to(device) for layer in G.style_layers}
         self.styles = {layer: self.S[layer][start_ind:start_ind+num_images] for layer in G.style_layers}
-        self.latent = self.W[start_ind:start_indnum_images]
+        self.latent = self.W[start_ind:start_ind+num_images]
         self.latent = self.latent.to(device)
         del self.W
         del self.S
