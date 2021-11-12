@@ -1,7 +1,8 @@
 import argparse
 import copy
-from tqdm import tqdm
+import os
 from pprint import pprint
+from tqdm import tqdm
 
 import numpy as np
 import PIL.Image
@@ -13,7 +14,7 @@ import legacy
 from wrapper import Generator
 
 
-class StyleManipulator():
+class Manipulator():
     """Manipulator for style editing
 
     in paper, use 100 image pairs to estimate the mean for alpha(magnitude of the perturbation) [-5, 5]
@@ -33,27 +34,67 @@ class StyleManipulator():
     edited_styles : List[styles]
     edited_images : List[(num_images, 3, 1024, 1024)]
     """
-    def __init__(self, G, device, lst_alpha, num_images):
+    def __init__(self, G, device, lst_alpha, num_images, start_ind=0):
+        """
+        Initialize 
+        use pre-saved generated latent/style from random Z
+        to use projection, used method "set_real_img_projection"
+        """
+        assert start_ind + num_images < 2000
         self.W = torch.load('tensor/W.pt')
         self.S = torch.load('tensor/S.pt')
         self.S_mean = torch.load('tensor/S_mean.pt')
         self.S_std = torch.load('tensor/S_std.pt')
 
         self.S = {layer: self.S[layer].to(device) for layer in G.style_layers}
-        self.styles = {layer: self.S[layer][:num_images] for layer in G.style_layers}
-        self.latent = self.W[:num_images]
+        self.styles = {layer: self.S[layer][start_ind:start_ind+num_images] for layer in G.style_layers}
+        self.latent = self.W[start_ind:start_indnum_images]
         self.latent = self.latent.to(device)
         del self.W
         del self.S
+
+        # S_mean, S_std for extracting global style direction
         self.S_mean = {layer: self.S_mean[layer].to(device) for layer in G.style_layers}
         self.S_std = {layer: self.S_std[layer].to(device) for layer in G.style_layers}
 
+        # setting
         self.G = G
         self.device = device
         self.num_images = num_images
         self.lst_alpha = lst_alpha
+        self.manipulate_layers = [layer for layer in G.style_layers if 'torgb' not in layer] 
+
+    def set_alpha(self, lst_alpha):
+        """Setter for alpha
+        """
+        self.lst_alpha = lst_alpha
+
+    def set_real_img_projection(self, exp_dir):
+        """Set real img instead of pre-saved styles
+        Input : image dir to manipulate 
+        - preprocess(face align, project image) images in exp_dir 
+            - Dlib face landmarks detector : wrapper.FaceLandmarksDetector
+            - W projector : wrapper.W_projector
+            - W+ projector : wrapper.W_plus_projector
+
+        Set attributes
+        - self.num_images
+        - self.latent
+        - self.styles
+        """
+        allowed_extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
+        pass
+
+    def edit(self, delta_style):
+        """Edit style by given delta_style
+        """
+        pass
 
     def edit_one_channel(self, layer, channel_ind:int):
+        """Edit style from given layer, channel index
+        - use mean value of pre-saved style
+        - use perturbation (pre-saved style std) * (alpha) as a boundary
+        """
         assert layer in self.G.style_layers
         assert 0 <= channel_ind < self.styles[layer].shape[1]
         boundary = self.S_std[layer][channel_ind].item()
@@ -72,6 +113,8 @@ class StyleManipulator():
         return styles
 
     def synthesis_from_styles(self, styles, start_ind, end_ind):
+        """Synthesis edited styles from styles, lst_alpha
+        """
         styles_ = list()
         for style in styles:
             style_ = dict()
@@ -103,7 +146,7 @@ def extract_global_direction(G, device, lst_alpha, num_images):
     del style
     print(f"total channels to manipulate: {cnt}")
     
-    manipulator = StyleManipulator(G, device, lst_alpha, num_images)
+    manipulator = Manipulator(G, device, lst_alpha, num_images)
 
     all_feats = list()
     for layer in manipulate_layers:
@@ -163,7 +206,7 @@ if __name__ == '__main__':
         lst_alpha = [-5, 0, 5]
         layer = G.style_layers[6]
         channel_ind = 501
-        manipulator = StyleManipulator(G, device, lst_alpha, num_images)
+        manipulator = Manipulator(G, device, lst_alpha, num_images)
         styles = manipulator.edit_one_channel(layer, channel_ind)
         start_ind, end_ind= 0, 10
         imgs = manipulator.synthesis_from_styles(styles, start_ind, end_ind)

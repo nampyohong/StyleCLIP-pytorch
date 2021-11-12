@@ -49,3 +49,6 @@ RUN pip install tensorboard
 RUN pip install streamlit
 RUN pip install jupyter
 #RUN pip install tensorflow==1.15
+
+RUN pip install ftfy regex tqdm gdown
+RUN pip install git+https://github.com/openai/CLIP.git
