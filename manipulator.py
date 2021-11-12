@@ -85,8 +85,12 @@ class Manipulator():
         """Edit style by given delta_style
         - use perturbation (delta s) * (alpha) as a boundary
         """
-        breakpoint()
-        styles = []
+        styles = [copy.deepcopy(self.styles) for _ in range(len(self.lst_alpha))]
+
+        for (alpha, style) in zip(self.lst_alpha, styles):
+            for layer in self.G.style_layers:
+                perturbation = delta_s[layer] * alpha
+                style[layer] += perturbation
         return styles
 
     def manipulate_one_channel(self, layer, channel_ind:int):
@@ -106,8 +110,8 @@ class Manipulator():
        
         # apply one channel manipulation
         for img_ind in range(self.num_images):
-            for edit_ind, delta_s in enumerate(perturbation):
-                styles[edit_ind][layer][img_ind][channel_ind] += delta_s
+            for edit_ind, delta in enumerate(perturbation):
+                styles[edit_ind][layer][img_ind][channel_ind] += delta
 
         return styles
 

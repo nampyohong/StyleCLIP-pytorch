@@ -51,7 +51,7 @@ if __name__ == "__main__":
     manipulator = Manipulator(G, device, lst_alpha, num_images)
 
     # get style direction
-    beta_threshold=0.13
+    beta_threshold = 0.13
     delta_s, num_channel = get_delta_s(fs3, delta_t, manipulator, beta_threshold=beta_threshold)
 
     print(f'{num_channel} channels will be manipulated under the beta threshold {beta_threshold}')
