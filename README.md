@@ -39,18 +39,26 @@ Direction Extractor (pytorch)
 
 Test Pipeline
 
+--------------
+Overall Flow
+1. input image face align
+2. project image to latent space(W/W+)
+3. convert latent to style
+
+4. input text prompt
+    - neutral / target text
+5. get delta t from input text, using clip text encoder
+
+6. (preprocessed) get extracted global direction
+7. get delta s from global direction and delta t, that satisfy beta threshold
+
+8. manipulate style codes in style space
+9. visualize
 
 
 --------------
-Flow
-- Extract W latent, S style, S mean/std from 100000 / 2000 / 100000 
-  generated Z random latent
-- Extract global direction from style space
-
-- Align target face image using Dlib face landmarks detector
-- Get projected W/W+ tensor from aligned image
-- Pivot Tuning after style space(only for modulated conv2d layer)
-
-
+manipulation option
+- input image or generate z from random seed
+- text description(neutral, target)
 - manipulation strength (alpha)
 - disentangle threshold (beta) 
