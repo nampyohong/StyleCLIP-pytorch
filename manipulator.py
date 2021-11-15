@@ -65,18 +65,19 @@ class Manipulator():
         """
         self.lst_alpha = lst_alpha
 
-    def set_real_img_projection(self, exp_dir):
+    def set_real_img_projection(self, expdir):
         """Set real img instead of pre-saved styles
         Input : image dir to manipulate 
-        - preprocess(face align, project image) images in exp_dir 
+        - preprocess(face align images) in expdir 
             - Dlib face landmarks detector : wrapper.FaceLandmarksDetector
+                - set self.num_images
+        - image inversion type
             - W projector : wrapper.W_projector
+                - set self.latent, self.styles
             - W+ projector : wrapper.W_plus_projector
-
-        Set attributes
-        - self.num_images
-        - self.latent
-        - self.styles
+                - set self.latent, self.styles
+            - Pivot tuning inversion : 
+                - set self.latent, self.styles, self.G
         """
         allowed_extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
         pass
