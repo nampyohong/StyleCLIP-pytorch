@@ -1,8 +1,9 @@
 import time
+import shutil
 
 import dlib
 import numpy as np
-import PIL.Image
+import PIL.Image 
 import torch
 
 import dnnlib
@@ -15,7 +16,12 @@ from torch_utils.misc import copy_params_and_buffers
 class FaceLandmarksDetector:
     """Dlib landmarks detector wrapper
     """
-    def __init__(self, model_path, tmpdir):
+    def __init__(
+            self, 
+            model_path='pretrained/shape_predictor_68_face_landmarks.dat', 
+            tmp_dir='tmp'
+        ):
+
         self.detector = LandmarksDetector(model_path)
         self.timestamp = int(time.time())
         self.tmp_src = f'{tmp_dir}/{self.timestamp}_src.png'
@@ -135,3 +141,11 @@ class Generator():
         '''latent w -> generated image
         '''
         return self.G.synthesis(latent, noise_mode='const')
+
+
+class e4eEncoder:
+    pass
+
+
+class PivotTuningInversion:
+    pass

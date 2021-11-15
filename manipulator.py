@@ -8,7 +8,8 @@ import PIL.Image
 import torch
 
 import clip
-from wrapper import Generator
+from wrapper import FaceLandmarksDetector, Generator, VGGFeatExtractor
+from projector import project
 
 
 class Manipulator():
@@ -54,6 +55,10 @@ class Manipulator():
         self.S_std = {layer: self.S_std[layer].to(device) for layer in G.style_layers}
 
         # setting
+        self.landmarks_detector = FaceLandmarksDetector()
+        breakpoint()
+        self.vgg16 = VGGFeatExtractor(device).module
+        self.W_projector_steps = 200
         self.G = G
         self.device = device
         self.num_images = num_images
@@ -65,22 +70,57 @@ class Manipulator():
         """
         self.lst_alpha = lst_alpha
 
-    def set_real_img_projection(self, expdir):
+    def set_real_img_projection(self, expdir, mode='W'):
         """Set real img instead of pre-saved styles
         Input : image dir to manipulate 
         - preprocess(face align images) in expdir 
             - Dlib face landmarks detector : wrapper.FaceLandmarksDetector
                 - set self.num_images
         - image inversion type
-            - W projector : wrapper.W_projector
+            - W projector : projector.project
+                - mode == 'w'
                 - set self.latent, self.styles
-            - W+ projector : wrapper.W_plus_projector
+            - W+ projector : wrapper.e4eEncoder
+                - mode == 'w+' or mode == 'w_plus'
                 - set self.latent, self.styles
-            - Pivot tuning inversion : 
+            - Pivot tuning inversion : wrapper.PivotTuningInversion
+                - mode == 'PTI'
                 - set self.latent, self.styles, self.G
         """
+        assert mode in ['w', 'w+', 'w_plus', 'PTI']
         allowed_extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
-        pass
+        imgpaths = sorted(os.listdir(expdir))
+        imgpaths = [os.path.join(expdir, imgpath) 
+                    for imgpath in imgpaths 
+                    if imgpath.split('.')[-1] in allowed_extensions]
+        self.num_images = len(imgpaths)
+
+        if mode == 'w':
+            self.latent = list()
+            for imgpath in tqdm(imgpaths, total=len(imgpaths)):
+                target_pil = self.landmarks_detector(imgpath)
+                w, h = target_pil.size
+                s = min(w, h)
+                target_pil = target_pil.crop(((w - s) // 2, (h - s) // 2, (w + s) // 2, (h + s) // 2))
+                target_pil = target_pil.resize((self.G.G.img_resolution, self.G.G.img_resolution), 
+                                                PIL.Image.LANCZOS)
+                target_uint8 = np.array(target_pil, dtype=np.uint8)
+                projected_w_steps = project(
+                    self.G.G,
+                    self.vgg16,
+                    target=torch.Tensor(target_uint8.transpose([2,0,1])).to(self.device),
+                    num_steps=self.W_projector_steps,
+                    device=self.device,
+                    verbose=False,
+                )
+                self.latent.append(projected_w_steps[-1])
+            self.latent = torch.stack(self.latent)
+            self.styles = self.G.mapping_stylespace(self.latent)
+        else: # mode == 'w+' or mode == 'w_plus' or mode == 'PTI'
+            pass
+
+        if mode == 'PTI':
+            pass
 
     def manipulate(self, delta_s):
         """Edit style by given delta_style
