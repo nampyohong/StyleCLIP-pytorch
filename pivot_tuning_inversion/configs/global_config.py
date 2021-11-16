@@ -9,4 +9,4 @@ pivotal_training_steps = 0
 model_snapshot_interval = 400
 
 ## Run name to be updated during PTI
-run_name = 'test'
+run_name = 'test2'

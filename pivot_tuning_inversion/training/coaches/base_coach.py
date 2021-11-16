@@ -52,7 +52,7 @@ class BaseCoach:
         self.original_G = load_old_G()
 
         self.space_regulizer = Space_Regulizer(self.original_G, self.lpips_loss)
-        self.optimizer = self.configure_optimizers()
+        self.optimizer = self.configure_optimizers(train_stylespace=hyperparameters.train_stylespace)
 
     def get_inversion(self, w_path_dir, image_name, image):
         embedding_dir = f'{w_path_dir}/{paths_config.pti_results_keyword}/{image_name}'
@@ -101,8 +101,17 @@ class BaseCoach:
     def train(self):
         pass
 
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
+    def configure_optimizers(self, train_stylespace=False):
+        if train_stylespace:
+            names, params = list(), list()
+            for name_, param_ in self.G.named_parameters():
+                names.append(name_)
+                params.append(param_)
+            pass # TODO
+
+            optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
+        else:
+            optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
 
         return optimizer
 

@@ -37,6 +37,8 @@ class MultiIDCoach(BaseCoach):
             os.makedirs(embedding_dir, exist_ok=True)
 
             w_pivot = self.get_inversion(w_path_dir, image_name, image)
+            torch.save(w_pivot, f'{embedding_dir}/0.pt')
+
             w_pivots.append(w_pivot)
             images.append((image_name, image))
             self.image_counter += 1

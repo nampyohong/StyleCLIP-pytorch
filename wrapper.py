@@ -79,8 +79,12 @@ class Generator():
         }
         self.common_kwargs = {'c_dim': 0, 'img_resolution': 1024, 'img_channels': 3}
 
-        with dnnlib.util.open_url(ckpt) as f:
-            old_G = legacy.load_network_pkl(f)['G_ema'].requires_grad_(False).to(device)
+        if ckpt.split('.')[-1] == 'pkl':
+            with dnnlib.util.open_url(ckpt) as f:
+                old_G = legacy.load_network_pkl(f)['G_ema'].requires_grad_(False).to(device)
+        elif ckpt.split('.')[-1] == 'pt':
+            with open(ckpt, 'rb') as f:
+                old_G = torch.load(f).to(device)
 
         self.G = dnnlib.util.construct_class_by_name(**self.G_kwargs, **self.common_kwargs).eval().requires_grad_(False).to(device)
         copy_params_and_buffers(old_G, self.G, require_all=False)

@@ -15,7 +15,7 @@ experiments_output_dir = 'pivot_tuning_inversion/output'
 
 ## Input info
 ### Input dir, where the images reside
-input_data_path = 'pivot_tuning_inversion/aligned2'
+input_data_path = 'pivot_tuning_inversion/aligned'
 #
 ### Inversion identifier, used to keeping track of the inversion results. Both the latent code and the generator
 input_data_id = 'test'
