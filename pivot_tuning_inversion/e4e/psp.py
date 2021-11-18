@@ -21,8 +21,9 @@ class pSp(nn.Module):
         self.opts = opts
         # Define architecture
         self.encoder = self.set_encoder()
-        self.decoder = Generator(opts.stylegan_size, 512, 8, channel_multiplier=2)
-        self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
+        #self.decoder = Generator(opts.stylegan_size, 512, 8, channel_multiplier=2)
+        #self.decoder = Generator('pretrained/ffhq.pkl', opts.device).G
+        #self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
         # Load weights if needed
         self.load_weights()
 
@@ -40,16 +41,19 @@ class pSp(nn.Module):
             print('Loading e4e over the pSp framework from checkpoint: {}'.format(self.opts.checkpoint_path))
             ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
             self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
-            self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
+            #self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
             self.__load_latent_avg(ckpt)
         else:
             print('Loading encoders weights from irse50!')
             encoder_ckpt = torch.load(paths_config.ir_se50)
             self.encoder.load_state_dict(encoder_ckpt, strict=False)
-            print('Loading decoder weights from pretrained!')
-            ckpt = torch.load(self.opts.stylegan_weights)
-            self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
+#            print('Loading decoder weights from pretrained!')
+#            ckpt = torch.load(self.opts.stylegan_weights)
+#            self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
             self.__load_latent_avg(ckpt, repeat=self.encoder.style_count)
+
+        self.encoder.to(self.opts.device)
+        #self.decoder.to(self.opts.device)
 
     def forward(self, x, resize=True, latent_mask=None, input_code=False, randomize_noise=True,
                 inject_latent=None, return_latents=False, alpha=None):
@@ -75,18 +79,20 @@ class pSp(nn.Module):
                     codes[:, i] = 0
 
         input_is_latent = not input_code
-        images, result_latent = self.decoder([codes],
-                                             input_is_latent=input_is_latent,
-                                             randomize_noise=randomize_noise,
-                                             return_latents=return_latents)
-
-        if resize:
-            images = self.face_pool(images)
+#        images, result_latent = self.decoder([codes],
+#                                             input_is_latent=input_is_latent,
+#                                             randomize_noise=randomize_noise,
+#                                             return_latents=return_latents)
+#
+#        if resize:
+#            images = self.face_pool(images)
 
         if return_latents:
-            return images, result_latent
+            return None, codes
+            #return images, result_latent
         else:
-            return images
+            #return images
+            return None
 
     def __load_latent_avg(self, ckpt, repeat=None):
         if 'latent_avg' in ckpt:

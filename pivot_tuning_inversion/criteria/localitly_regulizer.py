@@ -13,10 +13,11 @@ class Space_Regulizer:
         self.lpips_loss = lpips_net
 
     def get_morphed_w_code(self, new_w_code, fixed_w):
-        interpolation_direction = new_w_code - fixed_w
-        interpolation_direction_norm = torch.norm(interpolation_direction, p=2)
+        interpolation_direction = new_w_code - fixed_w # w_z - w_p
+        interpolation_direction_norm = torch.norm(interpolation_direction, p=2) # ||w_z - w_p||_2
         direction_to_move = hyperparameters.regulizer_alpha * interpolation_direction / interpolation_direction_norm
-        result_w = fixed_w + direction_to_move
+        # regulizer_alpha : 30
+        result_w = fixed_w + direction_to_move # w_r
         self.morphing_regulizer_alpha * fixed_w + (1 - self.morphing_regulizer_alpha) * new_w_code
 
         return result_w

@@ -28,6 +28,7 @@ def run_PTI(run_name='', use_wandb=False, use_multi_id_training=False):
     dataset = ImagesDataset(paths_config.input_data_path, transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]))
+    dataset.__getitem__(0)
 
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 

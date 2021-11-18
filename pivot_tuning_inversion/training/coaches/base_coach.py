@@ -18,15 +18,16 @@ from pivot_tuning_inversion.utils.models_utils import toogle_grad, load_old_G
 
 
 class BaseCoach:
-    def __init__(self, data_loader, use_wandb):
+    def __init__(self, data_loader, use_wandb, device=None):
 
         self.use_wandb = use_wandb
         self.data_loader = data_loader
         self.w_pivots = {}
         self.image_counter = 0
+        self.device=device
 
         if hyperparameters.first_inv_type == 'w+':
-            self.initilize_e4e()
+            self.initilize_e4e(device=device)
 
         self.e4e_image_transform = transforms.Compose([
             transforms.ToPILImage(),
@@ -35,7 +36,11 @@ class BaseCoach:
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 
         # Initialize loss
-        self.lpips_loss = LPIPS(net=hyperparameters.lpips_type).to(global_config.device).eval()
+        if device is None:
+            self.lpips_loss = LPIPS(net=hyperparameters.lpips_type).to(global_config.device).eval()
+        else:
+            self.lpips_loss = LPIPS(net=hyperparameters.lpips_type).to(device).eval()
+
 
         self.restart_training()
 
@@ -141,20 +146,22 @@ class BaseCoach:
 
         return generated_images
 
-    def initilize_e4e(self):
+    def initilize_e4e(self, device=None):
         ckpt = torch.load(paths_config.e4e, map_location='cpu')
         opts = ckpt['opts']
+        if device is not None:
+            opts['device'] = device
         opts['batch_size'] = hyperparameters.train_batch_size
         opts['checkpoint_path'] = paths_config.e4e
         opts = Namespace(**opts)
         self.e4e_inversion_net = pSp(opts)
         self.e4e_inversion_net.eval()
-        self.e4e_inversion_net = self.e4e_inversion_net.to(global_config.device)
+        self.e4e_inversion_net = self.e4e_inversion_net.to(opts.device)
         toogle_grad(self.e4e_inversion_net, False)
 
     def get_e4e_inversion(self, image):
         image = (image + 1) / 2
-        new_image = self.e4e_image_transform(image[0]).to(global_config.device)
+        new_image = self.e4e_image_transform(image[0]).to(self.e4e_inversion_net.opts.device)
         _, w = self.e4e_inversion_net(new_image.unsqueeze(0), randomize_noise=False, return_latents=True, resize=False,
                                       input_code=False)
         if self.use_wandb:

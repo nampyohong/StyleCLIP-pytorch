@@ -126,6 +126,7 @@ class Encoder4Editing(Module):
         super(Encoder4Editing, self).__init__()
         assert num_layers in [50, 100, 152], 'num_layers should be 50,100, or 152'
         assert mode in ['ir', 'ir_se'], 'mode should be ir or ir_se'
+        self.opts = opts
         blocks = get_blocks(num_layers)
         if mode == 'ir':
             unit_module = bottleneck_IR
@@ -140,7 +141,7 @@ class Encoder4Editing(Module):
                 modules.append(unit_module(bottleneck.in_channel,
                                            bottleneck.depth,
                                            bottleneck.stride))
-        self.body = Sequential(*modules)
+        self.body = Sequential(*modules).to(opts.device)
 
         self.styles = nn.ModuleList()
         log_size = int(math.log(opts.stylegan_size, 2))

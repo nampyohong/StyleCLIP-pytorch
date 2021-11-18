@@ -5,12 +5,16 @@ import dlib
 import numpy as np
 import PIL.Image 
 import torch
+from torchvision.transforms import transforms
 
 import dnnlib
 import legacy
 from dlib_utils.face_alignment import image_align
 from dlib_utils.landmarks_detector import LandmarksDetector
 from torch_utils.misc import copy_params_and_buffers
+
+from pivot_tuning_inversion.utils.ImagesDataset import ImagesDataset
+from pivot_tuning_inversion.training.coaches.multi_id_coach import MultiIDCoach
 
 
 class FaceLandmarksDetector:
@@ -37,7 +41,7 @@ class FaceLandmarksDetector:
         except:
             im = PIL.Image.open(self.tmp_src)
             im.save(self.tmp_align)
-        return PIL.Image.open(self.tmp_align)
+        return PIL.Image.open(self.tmp_align).convert('RGB')
 
 
 class VGGFeatExtractor():
@@ -148,7 +152,28 @@ class Generator():
 
 
 class e4eEncoder:
-    pass
+    '''e4e Encoder
+    img paths -> latent w
+    '''
+    def __init__(self, device):
+        self.device = device
+
+    def __call__(self, target_pils):
+        dataset = ImagesDataset(
+            target_pils,
+            self.device,
+            transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+        )
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+    
+        coach = MultiIDCoach(dataloader, use_wandb=False, device=self.device)
+        latents = list()
+        for fname, image in dataloader:
+            latents.append(coach.get_e4e_inversion(image))
+        latents = torch.cat(latents)
+        return latents
 
 
 class PivotTuningInversion:
