@@ -127,7 +127,7 @@ class Manipulator():
             self.latent = torch.stack(self.latent)
             self.styles = self.G.mapping_stylespace(self.latent)
 
-        else: # mode == 'w+' or mode == 'w_plus' or mode == 'pti'
+        else: # mode == 'w+' or mode == 'w_plus' or mode == '[]_pti'
             # use e4e encoder
             target_pils = list()
             for imgpath in imgpaths:
