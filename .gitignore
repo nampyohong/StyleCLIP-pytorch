@@ -4,6 +4,7 @@
 *.pth
 *.pt
 *.dat
+test.ipynb
 test/
 test2/
 tmp/
