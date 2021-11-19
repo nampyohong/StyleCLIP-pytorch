@@ -144,7 +144,6 @@ class Manipulator():
             pti = PivotTuning(self.device, self.G.G, mode=pivot_tuning_mode)
             new_G = pti(self.latent, target_pils)
             self.G.G = new_G
-            breakpoint()
 
     def manipulate(self, delta_s):
         """Edit style by given delta_style

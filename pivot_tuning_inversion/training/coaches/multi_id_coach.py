@@ -10,8 +10,8 @@ from pivot_tuning_inversion.utils.log_utils import log_images_from_w
 
 class MultiIDCoach(BaseCoach):
 
-    def __init__(self, data_loader, use_wandb, device=None, generator=None):
-        super().__init__(data_loader, use_wandb, device, generator)
+    def __init__(self, data_loader, use_wandb, device=None, generator=None, mode='w'):
+        super().__init__(data_loader, use_wandb, device, generator, mode)
 
 
     def train_from_latent(self):

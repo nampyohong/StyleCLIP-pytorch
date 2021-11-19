@@ -113,16 +113,18 @@ class BaseCoach:
 
     def configure_optimizers(self, mode='w'):
         if mode == 's':
-            names, params = list(), list()
+            names, params, new_names, new_params = list(), list(), list(), list()
             for name_, param_ in self.G.named_parameters():
                 names.append(name_)
                 params.append(param_)
-            breakpoint()
+            for name_, param_ in zip(names, params):
+                if 'affine' not in name_:
+                    new_names.append(name_)
+                    new_params.append(param_)
+            optimizer = torch.optim.Adam(new_params, lr=hyperparameters.pti_learning_rate)
 
-            optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
         elif mode == 'w':
             optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
-
         return optimizer
 
     def calc_loss(self, generated_images, real_images, log_name, new_G, use_ball_holder, w_batch):

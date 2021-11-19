@@ -200,7 +200,13 @@ class PivotTuning:
                 transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
         )
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
-        coach = MultiIDCoach(dataloader, use_wandb=False, device=self.device, generator=self.G)
+        coach = MultiIDCoach(
+            dataloader, 
+            use_wandb=False, 
+            device=self.device, 
+            generator=self.G,
+            mode=self.mode
+        )
         # run coach by self.mode
         new_G = coach.train_from_latent()
         return new_G
