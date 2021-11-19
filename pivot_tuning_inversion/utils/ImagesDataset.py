@@ -6,6 +6,22 @@ from PIL import Image
 from pivot_tuning_inversion.utils.data_utils import make_dataset
 
 
+class ImageLatentsDataset(Dataset):
+
+    def __init__(self, target_pils, latent, device, source_transform):
+        self.target_pils = target_pils
+        self.latent = latent
+        self.device = device
+        self.source_transform = source_transform
+
+    def __len__(self):
+        return len(self.latent)
+
+    def __getitem__(self, ind):
+        image = self.source_transform(self.target_pils[ind]).to(self.device)
+        return image, self.latent[ind]
+
+
 class ImagesDataset(Dataset):
 
     def __init__(self, source_root, device, source_transform=None):

@@ -141,8 +141,8 @@ class Manipulator():
         if 'pti' in mode: # w_pti or s_pti
             # pivot tuning inversion 
             pivot_tuning_mode = mode.split('_')[0]
-            pti = PivotTuning(self.device, mode=pivot_tuning_mode)
-            new_G = pti()
+            pti = PivotTuning(self.device, self.G.G, mode=pivot_tuning_mode)
+            new_G = pti(self.latent, target_pils)
             self.G.G = new_G
             breakpoint()
 

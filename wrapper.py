@@ -13,7 +13,7 @@ from dlib_utils.face_alignment import image_align
 from dlib_utils.landmarks_detector import LandmarksDetector
 from torch_utils.misc import copy_params_and_buffers
 
-from pivot_tuning_inversion.utils.ImagesDataset import ImagesDataset
+from pivot_tuning_inversion.utils.ImagesDataset import ImagesDataset, ImageLatentsDataset
 from pivot_tuning_inversion.training.coaches.multi_id_coach import MultiIDCoach
 
 
@@ -184,14 +184,23 @@ class PivotTuning:
     - 'latent' : use latent pivot
     - 'style' : use style pivot
     '''
-    def __init__(self, device, mode='w'):
+    def __init__(self, device, G, mode='w'):
         assert mode in ['w', 's']
         self.device = device
+        self.G = G
         self.mode = mode
 
-    def __call__(self, latent):
-        # latent dataset
-        # latent dataloader
+    def __call__(self, latent, target_pils):
+        dataset = ImageLatentsDataset(
+            target_pils,
+            latent, 
+            self.device,
+            transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+        )
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+        coach = MultiIDCoach(dataloader, use_wandb=False, device=self.device, generator=self.G)
         # run coach by self.mode
-        new_G = None 
+        new_G = coach.train_from_latent()
         return new_G

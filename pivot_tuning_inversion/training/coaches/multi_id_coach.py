@@ -10,16 +10,42 @@ from pivot_tuning_inversion.utils.log_utils import log_images_from_w
 
 class MultiIDCoach(BaseCoach):
 
-    def __init__(self, data_loader, use_wandb, device=None):
-        super().__init__(data_loader, use_wandb, device)
+    def __init__(self, data_loader, use_wandb, device=None, generator=None):
+        super().__init__(data_loader, use_wandb, device, generator)
 
 
     def train_from_latent(self):
-        pass
+        '''
+        train mode : self.mode
+        - w : train from latent pivot
+        - s : train from style pivot
+        '''
+        use_ball_holder = True
+        self.G.synthesis.train()
+        self.G.mapping.train()
 
-    def train_from_style(self):
-        pass
-        
+        for i in tqdm(range(hyperparameters.max_pti_steps)):
+            self.image_counter = 0
+
+            for image, w_pivot in self.data_loader:
+                if self.image_counter >= hyperparameters.max_images_to_invert:
+                    break
+                real_images_batch = image
+                generated_images = self.forward(w_pivot)
+
+                loss, l2_loss_val, loss_lpips = self.calc_loss(generated_images, real_images_batch, '',
+                                      self.G, use_ball_holder, w_pivot)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                use_ball_holder = global_config.training_step % hyperparameters.locality_regularization_interval == 0
+
+                global_config.training_step += 1
+                self.image_counter += 1
+
+        return self.G.requires_grad_(False)
 
     def train(self):
         self.G.synthesis.train()

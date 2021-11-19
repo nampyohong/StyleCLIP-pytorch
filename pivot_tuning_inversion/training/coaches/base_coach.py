@@ -18,13 +18,18 @@ from pivot_tuning_inversion.utils.models_utils import toogle_grad, load_old_G
 
 
 class BaseCoach:
-    def __init__(self, data_loader, use_wandb, device=None):
+    def __init__(self, data_loader, use_wandb, device=None, generator=None, mode='w'):
 
         self.use_wandb = use_wandb
         self.data_loader = data_loader
         self.w_pivots = {}
         self.image_counter = 0
-        self.device=device
+        self.device = device
+        self.mode = mode
+
+        if generator is not None:
+            self.G = generator
+            self.original_G = generator
 
         if hyperparameters.first_inv_type == 'w+':
             self.initilize_e4e(device=device)
@@ -41,23 +46,23 @@ class BaseCoach:
         else:
             self.lpips_loss = LPIPS(net=hyperparameters.lpips_type).to(device).eval()
 
-
         self.restart_training()
 
         # Initialize checkpoint dir
-        self.checkpoint_dir = paths_config.checkpoints_dir
-        os.makedirs(self.checkpoint_dir, exist_ok=True)
+#        self.checkpoint_dir = paths_config.checkpoints_dir
+#        os.makedirs(self.checkpoint_dir, exist_ok=True)
 
     def restart_training(self):
 
         # Initialize networks
-        self.G = load_old_G()
+        if not hasattr(self, 'G'):
+            self.G = load_old_G()
+            self.original_G = load_old_G()
+
         toogle_grad(self.G, True)
 
-        self.original_G = load_old_G()
-
         self.space_regulizer = Space_Regulizer(self.original_G, self.lpips_loss)
-        self.optimizer = self.configure_optimizers(train_stylespace=hyperparameters.train_stylespace)
+        self.optimizer = self.configure_optimizers(mode=self.mode)
 
     def get_inversion(self, w_path_dir, image_name, image):
         embedding_dir = f'{w_path_dir}/{paths_config.pti_results_keyword}/{image_name}'
@@ -106,23 +111,22 @@ class BaseCoach:
     def train(self):
         pass
 
-    def configure_optimizers(self, train_stylespace=False):
-        if train_stylespace:
+    def configure_optimizers(self, mode='w'):
+        if mode == 's':
             names, params = list(), list()
             for name_, param_ in self.G.named_parameters():
                 names.append(name_)
                 params.append(param_)
-            pass # TODO
+            breakpoint()
 
             optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
-        else:
+        elif mode == 'w':
             optimizer = torch.optim.Adam(self.G.parameters(), lr=hyperparameters.pti_learning_rate)
 
         return optimizer
 
     def calc_loss(self, generated_images, real_images, log_name, new_G, use_ball_holder, w_batch):
         loss = 0.0
-
         if hyperparameters.pt_l2_lambda > 0:
             l2_loss_val = l2_loss.l2_loss(generated_images, real_images)
             if self.use_wandb:
