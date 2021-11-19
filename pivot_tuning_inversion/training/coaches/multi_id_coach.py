@@ -13,6 +13,14 @@ class MultiIDCoach(BaseCoach):
     def __init__(self, data_loader, use_wandb, device=None):
         super().__init__(data_loader, use_wandb, device)
 
+
+    def train_from_latent(self):
+        pass
+
+    def train_from_style(self):
+        pass
+        
+
     def train(self):
         self.G.synthesis.train()
         self.G.mapping.train()

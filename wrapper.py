@@ -176,5 +176,22 @@ class e4eEncoder:
         return latents
 
 
-class PivotTuningInversion:
-    pass
+class PivotTuning:
+    '''pivot tuning inversion
+    latent, style -> latent, style, 
+
+    mode
+    - 'latent' : use latent pivot
+    - 'style' : use style pivot
+    '''
+    def __init__(self, device, mode='w'):
+        assert mode in ['w', 's']
+        self.device = device
+        self.mode = mode
+
+    def __call__(self, latent):
+        # latent dataset
+        # latent dataloader
+        # run coach by self.mode
+        new_G = None 
+        return new_G

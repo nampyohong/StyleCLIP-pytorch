@@ -23,7 +23,7 @@ if __name__ == '__main__':
     G = Generator(ckpt, device)
     expdir = 'pivot_tuning_inversion/aligned2'
     manipulator = Manipulator(G, device)
-    manipulator.set_real_img_projection(expdir, mode='w+')
+    manipulator.set_real_img_projection(expdir, mode='pti')
     breakpoint()
 #
 #    dataset = ImagesDataset(
