@@ -1,4 +1,4 @@
-#StyleCLIP-PyTorch: Text-Driven Manipulation of StyleGAN Imagery 
+# StyleCLIP-PyTorch: Text-Driven Manipulation of StyleGAN Imagery 
 with PTI (Pivot Tuning Inversion)
 
 # Following will be updated soon
@@ -6,7 +6,7 @@ with PTI (Pivot Tuning Inversion)
 - Explanation and instruction for module
 - Colab notebook demo
 
-#References
+# References
 
 1. stylegan2-ada-pytorch
 - https://github.com/NVlabs/stylegan2-ada-pytorch
