@@ -1,6 +1,10 @@
 StyleCLIP-PyTorch: Text-Driven Manipulation of StyleGAN Imagery 
 + PTI (Pivot Tuning Inversion)
 
+# Following will be updated soon
+- Manipulator for 256x256, 512x512 resolution
+- Explanation and instruction for module
+- Colab notebook demo
 
 --------------
 References
