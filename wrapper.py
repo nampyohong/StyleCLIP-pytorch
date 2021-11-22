@@ -69,17 +69,13 @@ class VGGFeatExtractor():
 class Generator():
     """StyleGAN2 generator wrapper
     """
-    def __init__(self, ckpt, device, resolution=1024):
+    def __init__(self, ckpt, device):
+        with dnnlib.util.open_url(ckpt) as f:
+            old_G = legacy.load_network_pkl(f)['G_ema'].requires_grad_(False).to(device)
+        resolution = old_G.img_resolution
         generator_config = GENERATOR_CONFIGS(resolution=resolution)
         self.G_kwargs = generator_config.G_kwargs
         self.common_kwargs = generator_config.common_kwargs
-
-        if ckpt.split('.')[-1] == 'pkl':
-            with dnnlib.util.open_url(ckpt) as f:
-                old_G = legacy.load_network_pkl(f)['G_ema'].requires_grad_(False).to(device)
-        elif ckpt.split('.')[-1] == 'pt':
-            with open(ckpt, 'rb') as f:
-                old_G = torch.load(f).to(device)
 
         self.G = dnnlib.util.construct_class_by_name(**self.G_kwargs, **self.common_kwargs).eval().requires_grad_(False).to(device)
         copy_params_and_buffers(old_G, self.G, require_all=False)
@@ -117,9 +113,9 @@ class Generator():
                 32 |     5 |      2 |       1 |     5-7
                 64 |     7 |      2 |       1 |     7-9
                128 |     9 |      2 |       1 |    9-11
-               256 |    11 |      2 |       1 |   11-13 
-               512 |    13 |      2 |       1 |   13-15
-              1024 |    15 |      2 |       1 |   15-17
+               256 |    11 |      2 |       1 |   11-13     # for  256 resolution
+               512 |    13 |      2 |       1 |   13-15     # for  512 resolution
+              1024 |    15 |      2 |       1 |   15-17     # for 1024 resolution
         '''
         styles = dict()
         for layer in self.style_layers:

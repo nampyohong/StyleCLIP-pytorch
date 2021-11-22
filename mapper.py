@@ -40,7 +40,7 @@ if __name__ == "__main__":
     G = Generator(ckpt, device)
     model, preprocess = clip.load("ViT-B/32", device=device)
 
-    fs3 = np.load('tensor/fs3_.npy')
+    fs3 = np.load('tensor/fs3.npy')
 
     # text space
     classnames=['face', 'face with glasses']

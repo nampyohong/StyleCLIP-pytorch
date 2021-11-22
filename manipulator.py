@@ -33,16 +33,25 @@ class Manipulator():
     edited_styles : List[styles]
     edited_images : List[(num_images, 3, 1024, 1024)]
     """
-    def __init__(self, G, device, lst_alpha=[0], num_images=1, start_ind=0):
+    def __init__(
+        self, 
+        G, 
+        device, 
+        lst_alpha=[0], 
+        num_images=1, 
+        start_ind=0, 
+        face_preprocess=True,
+        dataset_name=''
+    ):
         """Initialize 
         - use pre-saved generated latent/style from random Z
         - to use projection, used method "set_real_img_projection"
         """
         assert start_ind + num_images < 2000
-        self.W = torch.load('tensor/W.pt')
-        self.S = torch.load('tensor/S.pt')
-        self.S_mean = torch.load('tensor/S_mean.pt')
-        self.S_std = torch.load('tensor/S_std.pt')
+        self.W = torch.load(f'tensor/W{dataset_name}.pt')
+        self.S = torch.load(f'tensor/S{dataset_name}.pt')
+        self.S_mean = torch.load(f'tensor/S_mean{dataset_name}.pt')
+        self.S_std = torch.load(f'tensor/S_std{dataset_name}.pt')
 
         self.S = {layer: self.S[layer].to(device) for layer in G.style_layers}
         self.styles = {layer: self.S[layer][start_ind:start_ind+num_images] for layer in G.style_layers}
@@ -56,7 +65,9 @@ class Manipulator():
         self.S_std = {layer: self.S_std[layer].to(device) for layer in G.style_layers}
 
         # setting
-        self.landmarks_detector = FaceLandmarksDetector()
+        self.face_preprocess = face_preprocess
+        if face_preprocess:
+            self.landmarks_detector = FaceLandmarksDetector()
         self.vgg16 = VGGFeatExtractor(device).module
         self.W_projector_steps = 200
         self.G = G
@@ -103,7 +114,10 @@ class Manipulator():
         if mode == 'w':
             targets = list()
             for imgpath in imgpaths:
-                target_pil = self.landmarks_detector(imgpath)
+                if self.face_preprocess:
+                    target_pil = self.landmarks_detector(imgpath)
+                else:
+                    target_pil = PIL.Image.open(imgpath).convert('RGB')
                 w, h = target_pil.size
                 s = min(w, h)
                 target_pil = target_pil.crop(((w - s) // 2, (h - s) // 2, (w + s) // 2, (h + s) // 2))
@@ -131,7 +145,10 @@ class Manipulator():
             # use e4e encoder
             target_pils = list()
             for imgpath in imgpaths:
-                target_pil = self.landmarks_detector(imgpath)
+                if self.face_preprocess:
+                    target_pil = self.landmarks_detector(imgpath)
+                else:
+                    target_pil = PIL.Image.open(imgpath).convert('RGB')
                 target_pils.append(target_pil)
 
             self.encoder = e4eEncoder(self.device)
@@ -194,7 +211,7 @@ class Manipulator():
         return imgs
 
 
-def extract_global_direction(G, device, lst_alpha, num_images):
+def extract_global_direction(G, device, lst_alpha, num_images, dataset_name=''):
     """Extract global style direction in 100 images
     """
     assert len(lst_alpha) == 2
@@ -203,22 +220,27 @@ def extract_global_direction(G, device, lst_alpha, num_images):
     # lindex in original tf version
     manipulate_layers = [layer for layer in G.style_layers if 'torgb' not in layer] 
 
-    # total channel: 6048
-    latent = torch.randn([1,18,512]).to(device)
+    # total channel: 6048 (1024 resolution)
+    resolution = G.G.img_resolution
+    latent = torch.randn([1,G.to_w_idx[f'G.synthesis.b{resolution}.torgb.affine']+1,512]).to(device) # 1024 -> 18, 512 -> 16, 256 -> 14
     style = G.mapping_stylespace(latent)
     cnt = 0
     for layer in manipulate_layers:
         cnt += style[layer].shape[1]
     del latent
     del style
+
+    # 1024 -> 6048 channels, 256 -> 4928 channels
     print(f"total channels to manipulate: {cnt}")
     
-    manipulator = Manipulator(G, device, lst_alpha, num_images)
+    manipulator = Manipulator(G, device, lst_alpha, num_images, face_preprocess=False, dataset_name=dataset_name)
 
     all_feats = list()
+
     for layer in manipulate_layers:
         print(f'\nStyle manipulation in layer "{layer}"')
         channel_num = manipulator.styles[layer].shape[1]
+
         for channel_ind in tqdm(range(channel_num), total=channel_num):
             styles = manipulator.manipulate_one_channel(layer, channel_ind)
             # 2 * 100 images
@@ -251,29 +273,34 @@ def extract_global_direction(G, device, lst_alpha, num_images):
     fs3=fs3.mean(axis=1)
     fs3=fs3/np.linalg.norm(fs3,axis=-1)[:,None]
 
-    np.save('tensor/fs3.npy', fs3) # global style direction
+    np.save(f'tensor/fs3{dataset_name}.npy', fs3) # global style direction
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('runtype', type=str, default='test')
+    parser.add_argument('--ckpt', type=str, default='pretrained/ffhq.pkl')
+    parser.add_argument('--face_preprocess', type=bool, default=True)
+    parser.add_argument('--dataset_name', type=str, default='')
     args = parser.parse_args()
     
     runtype = args.runtype
-
     assert runtype in ['test', 'extract'] 
 
     device = torch.device('cuda:0')
-    ckpt = 'pretrained/ffhq.pkl'
+    ckpt = args.ckpt
     G = Generator(ckpt, device)
+
+    face_preprocess = args.face_preprocess
+    dataset_name = args.dataset_name
 
     if runtype == 'test': # test manipulator
         num_images = 100
         lst_alpha = [-5, 0, 5]
         layer = G.style_layers[6]
         channel_ind = 501
-        manipulator = Manipulator(G, device, lst_alpha, num_images)
+        manipulator = Manipulator(G, device, lst_alpha, num_images, face_preprocess=face_preprocess, dataset_name=dataset_name)
         styles = manipulator.manipulate_one_channel(layer, channel_ind)
         start_ind, end_ind= 0, 10
         imgs = manipulator.synthesis_from_styles(styles, start_ind, end_ind)
@@ -282,4 +309,4 @@ if __name__ == '__main__':
     elif runtype == 'extract': # extract global style direction from "tensor/S.pt"
         num_images = 100
         lst_alpha = [-5, 5]
-        extract_global_direction(G, device, lst_alpha, num_images)
+        extract_global_direction(G, device, lst_alpha, num_images, dataset_name=dataset_name)

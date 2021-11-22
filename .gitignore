@@ -8,7 +8,6 @@ test.ipynb
 test/
 test2/
 tmp/
-tensor/fs3_.npy
 .ipynb_checkpoints
 pivot_tuning_inversion/aligned/
 pivot_tuning_inversion/aligned2/
