@@ -1,7 +1,7 @@
 import os
 import os.path as osp
 
-class path_configs:
+class PATH_CONFIGS:
     """Paths configuration
     """
     def __init__(self): 
@@ -10,7 +10,7 @@ class path_configs:
         self.ir_se50 = 'pretrained/model_ir_se50.pth'
         self.dlib = 'pretrained/shape_predictor_68_face_landmarks.dat'
 
-class pti_hprams:
+class PTI_HPARAMS:
     """Pivot-tuning-inversion related hyper-parameters
     """
     def __init__(self):
@@ -43,7 +43,7 @@ class pti_hprams:
         self.train_batch_size = 1
 
 
-class pti_global_cfgs:
+class PTI_GLOBAL_CFGS:
     def __init__(self):
         self.training_step = 1
         self.imgage_rec_result_log_snapshot = 100

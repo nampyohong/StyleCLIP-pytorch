@@ -140,8 +140,6 @@ class Generator():
         '''style s -> generated image
         modulated conv2d,  synthesis layer.weight,  noise
         forward after styles = affine(w)
-
-        # TODO : latent 제거
         '''
         return self.G.synthesis(latent, styles=styles, noise_mode='const')
 

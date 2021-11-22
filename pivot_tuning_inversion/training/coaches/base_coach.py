@@ -7,12 +7,14 @@ import torch
 from torchvision import transforms
 from lpips import LPIPS
 
-from configs import pti_hparams, path_configs
-from pivot_tuning_inversion.training.projectors import w_projector
+from configs import PTI_HPARAMS, PATH_CONFIGS
 from pivot_tuning_inversion.criteria.localitly_regulizer import Space_Regulizer
 from pivot_tuning_inversion.criteria import l2_loss
 from pivot_tuning_inversion.e4e.psp import pSp
 from pivot_tuning_inversion.utils.models_utils import toogle_grad
+
+pti_hparams = PTI_HPARAMS()
+path_configs = PATH_CONFIGS()
 
 
 class BaseCoach:
@@ -24,7 +26,6 @@ class BaseCoach:
         self.device = device
         self.mode = mode
 
-        assert generator is not None
         self.G = generator
         self.original_G = generator
 
@@ -44,10 +45,10 @@ class BaseCoach:
 
 
     def restart_training(self):
-
-        toogle_grad(self.G, True)
-        self.space_regulizer = Space_Regulizer(self.original_G, self.lpips_loss, self.device)
-        self.optimizer = self.configure_optimizers(mode=self.mode)
+        if self.G is not None: 
+            toogle_grad(self.G, True)
+            self.space_regulizer = Space_Regulizer(self.original_G, self.lpips_loss)
+            self.optimizer = self.configure_optimizers(mode=self.mode)
 
     def get_inversion(self, w_path_dir, image_name, image):
 
@@ -64,9 +65,10 @@ class BaseCoach:
 
         else: # TODO : use projector.py
             id_image = torch.squeeze((image.to(self.device) + 1) / 2) * 255
-            w = w_projector.project(self.G, id_image, device=torch.device(self.device), w_avg_samples=600,
-                                    num_steps=pti_hparams.first_inv_steps, w_name=image_name,
-                                    )
+#            w = w_projector.project(self.G, id_image, device=torch.device(self.device), w_avg_samples=600,
+#                                    num_steps=pti_hparams.first_inv_steps, w_name=image_name,
+#                                    )
+            w = None
 
         return w
 

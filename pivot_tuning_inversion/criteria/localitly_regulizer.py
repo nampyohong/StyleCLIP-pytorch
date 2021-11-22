@@ -1,9 +1,10 @@
 import torch
 import numpy as np
 
-from configs import pti_hparams
+from configs import PTI_HPARAMS
 from pivot_tuning_inversion.criteria import l2_loss
 
+pti_hparams = PTI_HPARAMS()
 
 class Space_Regulizer:
     def __init__(self, original_G, lpips_net):

@@ -3,9 +3,11 @@ import os
 import torch
 from tqdm import tqdm
 
-from configs import pti_hparams, pti_global_cfgs
+from configs import PTI_HPARAMS, PTI_GLOBAL_CFGS
 from pivot_tuning_inversion.training.coaches.base_coach import BaseCoach
 
+pti_hparams = PTI_HPARAMS()
+pti_global_cfgs = PTI_GLOBAL_CFGS()
 
 class MultiIDCoach(BaseCoach):
 

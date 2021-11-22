@@ -1,10 +1,11 @@
 import matplotlib
-from configs import path_configs
+from configs import PATH_CONFIGS
 matplotlib.use('Agg')
 import torch
 from torch import nn
 from pivot_tuning_inversion.e4e.encoders import psp_encoders
 
+path_configs = PATH_CONFIGS()
 
 def get_keys(d, name):
     if 'state_dict' in d:
