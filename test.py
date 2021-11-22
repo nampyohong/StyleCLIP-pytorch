@@ -11,9 +11,9 @@ if __name__ == '__main__':
     expdir = 'samples'
     manipulator = Manipulator(G, device)
     # test e4e
-    #manipulator.set_real_img_projection(expdir, mode='w+')
+    manipulator.set_real_img_projection(expdir, mode='w+')
     # test w_pti
-    manipulator.set_real_img_projection(expdir, mode='w_pti')
+    #manipulator.set_real_img_projection(expdir, mode='w_pti')
     # test s_pti
     #manipulator.set_real_img_projection(expdir, mode='s_pti')
     breakpoint()

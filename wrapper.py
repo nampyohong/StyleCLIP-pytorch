@@ -9,6 +9,7 @@ from torchvision.transforms import transforms
 
 import dnnlib
 import legacy
+from configs import GENERATOR_CONFIGS
 from dlib_utils.face_alignment import image_align
 from dlib_utils.landmarks_detector import LandmarksDetector
 from torch_utils.misc import copy_params_and_buffers
@@ -68,20 +69,10 @@ class VGGFeatExtractor():
 class Generator():
     """StyleGAN2 generator wrapper
     """
-    def __init__(self, ckpt, device):
-        self.G_kwargs = {
-            'class_name': 'training.networks.Generator',
-            'z_dim': 512,
-            'w_dim': 512,
-            'mapping_kwargs': {'num_layers': 8},
-            'synthesis_kwargs': {
-                'channel_base': 32768,
-                'channel_max': 512,
-                'num_fp16_res': 4,
-                'conv_clamp': 256
-            }
-        }
-        self.common_kwargs = {'c_dim': 0, 'img_resolution': 1024, 'img_channels': 3}
+    def __init__(self, ckpt, device, resolution=1024):
+        generator_config = GENERATOR_CONFIGS(resolution=resolution)
+        self.G_kwargs = generator_config.G_kwargs
+        self.common_kwargs = generator_config.common_kwargs
 
         if ckpt.split('.')[-1] == 'pkl':
             with dnnlib.util.open_url(ckpt) as f:
@@ -97,12 +88,13 @@ class Generator():
 
         self.style_layers = [
             f'G.synthesis.b{feat_size}.{layer}.affine'
-            for feat_size in [pow(2,x) for x in range(2, 11)]
+            for feat_size in [pow(2,x) for x in range(2, int(np.log2(resolution))+1)]
             for layer in ['conv0', 'conv1', 'torgb']]
         del(self.style_layers[0])
         scope = locals()
         self.to_stylespace = {layer:eval(layer, scope) for layer in self.style_layers}
-        w_idx_lst = [0,1,1,2,3,3,4,5,5,6,7,7,8,9,9,10,11,11,12,13,13,14,15,15,16,17]
+        w_idx_lst = generator_config.w_idx_lst
+        assert len(self.style_layers) == len(w_idx_lst)
         self.to_w_idx = {self.style_layers[i]:w_idx_lst[i] for i in range(len(self.style_layers))}
 
     def mapping(self, z, truncation_psi=0.7, truncation_cutoff=None, skip_w_avg_update=False):

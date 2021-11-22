@@ -1,6 +1,26 @@
 import os
 import os.path as osp
 
+class GENERATOR_CONFIGS:
+    """StyleGAN2-ada generator configuration
+    """
+    def __init__(self, resolution=1024):
+        self.G_kwargs = {
+            'class_name': 'training.networks.Generator',
+            'z_dim': 512,
+            'w_dim': 512,
+            'mapping_kwargs': {'num_layers': 8},
+            'synthesis_kwargs': {
+                'channel_base': 32768,
+                'channel_max': 512,
+                'num_fp16_res': 4,
+                'conv_clamp': 256
+            }
+        }
+        self.common_kwargs = {'c_dim': 0, 'img_resolution': resolution, 'img_channels': 3}
+        self.w_idx_lst = [0,1,1,2,3,3,4,5,5,6,7,7,8,9,9,10,11,11,12,13,13,14,15,15,16,17]
+
+
 class PATH_CONFIGS:
     """Paths configuration
     """
