@@ -168,7 +168,7 @@ class e4eEncoder:
         )
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
     
-        coach = MultiIDCoach(dataloader, use_wandb=False, device=self.device)
+        coach = MultiIDCoach(dataloader, device=self.device)
         latents = list()
         for fname, image in dataloader:
             latents.append(coach.get_e4e_inversion(image))
@@ -202,7 +202,6 @@ class PivotTuning:
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
         coach = MultiIDCoach(
             dataloader, 
-            use_wandb=False, 
             device=self.device, 
             generator=self.G,
             mode=self.mode

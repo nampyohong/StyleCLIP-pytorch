@@ -53,5 +53,4 @@ RUN pip install jupyter
 RUN pip install ftfy regex tqdm gdown
 RUN pip install git+https://github.com/openai/CLIP.git
 
-RUN pip install wandb
 RUN pip install lpips

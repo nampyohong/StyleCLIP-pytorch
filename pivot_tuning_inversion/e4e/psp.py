@@ -1,10 +1,9 @@
 import matplotlib
-from pivot_tuning_inversion.configs import paths_config
+from configs import path_configs
 matplotlib.use('Agg')
 import torch
 from torch import nn
 from pivot_tuning_inversion.e4e.encoders import psp_encoders
-from pivot_tuning_inversion.e4e.stylegan2.model import Generator
 
 
 def get_keys(d, name):
@@ -21,9 +20,6 @@ class pSp(nn.Module):
         self.opts = opts
         # Define architecture
         self.encoder = self.set_encoder()
-        #self.decoder = Generator(opts.stylegan_size, 512, 8, channel_multiplier=2)
-        #self.decoder = Generator('pretrained/ffhq.pkl', opts.device).G
-        #self.face_pool = torch.nn.AdaptiveAvgPool2d((256, 256))
         # Load weights if needed
         self.load_weights()
 
@@ -41,15 +37,11 @@ class pSp(nn.Module):
             print('Loading e4e over the pSp framework from checkpoint: {}'.format(self.opts.checkpoint_path))
             ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
             self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
-            #self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
             self.__load_latent_avg(ckpt)
         else:
             print('Loading encoders weights from irse50!')
-            encoder_ckpt = torch.load(paths_config.ir_se50)
+            encoder_ckpt = torch.load(path_configs.ir_se50)
             self.encoder.load_state_dict(encoder_ckpt, strict=False)
-#            print('Loading decoder weights from pretrained!')
-#            ckpt = torch.load(self.opts.stylegan_weights)
-#            self.decoder.load_state_dict(ckpt['g_ema'], strict=False)
             self.__load_latent_avg(ckpt, repeat=self.encoder.style_count)
 
         self.encoder.to(self.opts.device)
