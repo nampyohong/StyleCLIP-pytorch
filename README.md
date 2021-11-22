@@ -14,14 +14,14 @@
 4. [Pivot Tuning Inversion](https://github.com/danielroich/PTI)
 
 # Installation
-- Docker build
-`$ sh build_img.sh`
-`$ sh build_container.sh [container-name]`
+## Docker build
+`$ sh build_img.sh`  
+`$ sh build_container.sh [container-name]`  
 
-- Install package
-`$ docker start [container-name]`
-`$ docker attach [container-name]`
-`$ pip install -v -e .`
+## Install package
+`$ docker start [container-name]`  
+`$ docker attach [container-name]`  
+`$ pip install -v -e .`  
 
 # Pretrained weights
 - [dlib landmarks detector](https://drive.google.com/file/d/1HKmjg6iXsWr4aFPuU0gBXPGR83wqMzq7/view?usp=sharing) 
@@ -51,6 +51,5 @@ Download and save this pretrained weights in `pretrained/` directory
 - Disentangle threshold (beta) 
 
 # TODO
-- Cleanup configuration system -> need to test
 - Cleanup e4e encoder wrapper -> use e4e encoder module directly
 - Global direction module refactoring(especially in gpu usage)
