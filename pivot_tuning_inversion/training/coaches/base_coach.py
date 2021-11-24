@@ -13,6 +13,7 @@ from pivot_tuning_inversion.criteria import l2_loss
 from pivot_tuning_inversion.e4e.psp import pSp
 from pivot_tuning_inversion.utils.models_utils import toogle_grad
 
+
 pti_hparams = PTI_HPARAMS()
 path_configs = PATH_CONFIGS()
 
@@ -43,34 +44,11 @@ class BaseCoach:
 
         self.restart_training()
 
-
     def restart_training(self):
         if self.G is not None: 
             toogle_grad(self.G, True)
             self.space_regulizer = Space_Regulizer(self.original_G, self.lpips_loss)
             self.optimizer = self.configure_optimizers(mode=self.mode)
-
-    def get_inversion(self, w_path_dir, image_name, image):
-
-        w_pivot = None
-        w_pivot = self.calc_inversions(image, image_name)
-
-        w_pivot = w_pivot.to(self.device)
-        return w_pivot
-
-    def calc_inversions(self, image, image_name):
-
-        if pti_hparams.first_inv_type == 'w+':
-            w = self.get_e4e_inversion(image)
-
-        else: # TODO : use projector.py
-            id_image = torch.squeeze((image.to(self.device) + 1) / 2) * 255
-#            w = w_projector.project(self.G, id_image, device=torch.device(self.device), w_avg_samples=600,
-#                                    num_steps=pti_hparams.first_inv_steps, w_name=image_name,
-#                                    )
-            w = None
-
-        return w
 
     @abc.abstractmethod
     def train(self):

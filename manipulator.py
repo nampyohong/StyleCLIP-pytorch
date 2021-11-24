@@ -81,43 +81,45 @@ class Manipulator():
         """
         self.lst_alpha = lst_alpha
 
-    def set_real_img_projection(self, imgdir, mode='w+'):
+    def set_real_img_projection(self, img, inv_mode='w', pti_mode=None):
         """Set real img instead of pre-saved styles
-        Input : image dir to manipulate 
-        - preprocess(face align images) in imgdir 
-            - Dlib face landmarks detector : wrapper.FaceLandmarksDetector
-                - set self.num_images
-        - image inversion type
-            - W projector : projector.project
-                - mode == 'w'
-                - set self.latent, self.styles
-            - W+ projector : wrapper.e4eEncoder
-                - mode == 'w+' or mode == 'w_plus'
-                - set self.latent, self.styles
-            - Pivot tuning inversion : wrapper.PivotTuning
-                - mode == 'w_pti'
-                -> use W space latent as pivot
-                - mode == 's_pti'
-                -> use S space style as pivot(tuning only G.synthsis's conv layers)
+        Args : 
+        - img : img directory or img file path to manipulate
+            - face aligned if self.face_preprocess == True
+            - set self.num_images
+        - inv_mode : inversion mode, setting self.latent, self.styles
+            - w : use W projector (projector.project)
+            - w+ : use e4e encoder (wrapper.e4eEncoder)
+        - pti_mode : pivot tuning inversion mode (wrapper.PivotTuning)
+            - None
+            - w : W latent pivot tuning
+            - s : S style pivot tuning
         """
-
-        assert mode in ['w', 'w+', 'w_plus', 'w_pti', 's_pti']
+        assert inv_mode in ['w', 'w+']
+        assert pti_mode in [None, 'w', 's']
         allowed_extensions = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']
-        imgpaths = sorted(os.listdir(imgdir))
-        imgpaths = [os.path.join(imgdir, imgpath) 
-                    for imgpath in imgpaths 
-                    if imgpath.split('.')[-1] in allowed_extensions]
+
+        # img directory input
+        if os.path.isdir(img):
+            imgpaths = sorted(os.listdir(img))
+            imgpaths = [os.path.join(img, imgpath) 
+                        for imgpath in imgpaths 
+                        if imgpath.split('.')[-1] in allowed_extensions]
+        # img file path input
+        else:
+            imgpaths = [img]
+
         self.num_images = len(imgpaths)
 
-        targets = list()
-
-        if mode == 'w':
+        if inv_mode == 'w':
             targets = list()
+            target_pils = list()
             for imgpath in imgpaths:
                 if self.face_preprocess:
                     target_pil = self.landmarks_detector(imgpath)
                 else:
                     target_pil = PIL.Image.open(imgpath).convert('RGB')
+                target_pils.append(target_pil)
                 w, h = target_pil.size
                 s = min(w, h)
                 target_pil = target_pil.crop(((w - s) // 2, (h - s) // 2, (w + s) // 2, (h + s) // 2))
@@ -128,12 +130,11 @@ class Manipulator():
 
             self.latent = list()
             for target in tqdm(targets, total=len(targets)):
-                target_uint8 = np.array(target_pil, dtype=np.uint8)
                 projected_w_steps = project(
                     self.G.G,
                     self.vgg16,
-                    target=torch.Tensor(target),
-                    num_steps=self.W_projector_steps,
+                    target=target,
+                    num_steps=self.W_projector_steps, # TODO get projector steps from configs
                     device=self.device,
                     verbose=False,
                 )
@@ -141,7 +142,7 @@ class Manipulator():
             self.latent = torch.stack(self.latent)
             self.styles = self.G.mapping_stylespace(self.latent)
 
-        else: # mode == 'w+' or mode == 'w_plus' or mode == '[]_pti'
+        else: # inv_mode == 'w+'
             # use e4e encoder
             target_pils = list()
             for imgpath in imgpaths:
@@ -155,10 +156,9 @@ class Manipulator():
             self.latent = self.encoder(target_pils)
             self.styles = self.G.mapping_stylespace(self.latent)
 
-        if 'pti' in mode: # w_pti or s_pti
+        if pti_mode is not None: # w or s
             # pivot tuning inversion 
-            pivot_tuning_mode = mode.split('_')[0]
-            pti = PivotTuning(self.device, self.G.G, mode=pivot_tuning_mode)
+            pti = PivotTuning(self.device, self.G.G, mode=pti_mode)
             new_G = pti(self.latent, target_pils)
             self.G.G = new_G
 

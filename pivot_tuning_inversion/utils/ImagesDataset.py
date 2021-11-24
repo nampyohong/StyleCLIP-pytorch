@@ -8,17 +8,21 @@ from pivot_tuning_inversion.utils.data_utils import make_dataset
 
 class ImageLatentsDataset(Dataset):
 
-    def __init__(self, target_pils, latent, device, source_transform):
+    def __init__(self, target_pils, latent, device, source_transform, resolution=1024):
         self.target_pils = target_pils
         self.latent = latent
         self.device = device
         self.source_transform = source_transform
+        self.resolution = resolution
 
     def __len__(self):
         return len(self.latent)
 
     def __getitem__(self, ind):
-        image = self.source_transform(self.target_pils[ind]).to(self.device)
+        pil = self.target_pils[ind]
+        if not pil.size[0] == self.resolution:
+            pil = pil.resize((self.resolution, self.resolution))
+        image = self.source_transform(pil).to(self.device)
         return image, self.latent[ind]
 
 

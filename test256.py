@@ -8,12 +8,10 @@ if __name__ == '__main__':
     device = torch.device('cuda:2')
     ckpt = 'pretrained/ffhq256.pkl'
     G = Generator(ckpt, device)
-    expdir = 'samples'
+    expdir = 'samples/test01.jpeg'
     manipulator = Manipulator(G, device)
     # test e4e
-    manipulator.set_real_img_projection(expdir, mode='w+')
-    # test w_pti
-    #manipulator.set_real_img_projection(expdir, mode='w_pti')
-    # test s_pti
-    #manipulator.set_real_img_projection(expdir, mode='s_pti')
+    #manipulator.set_real_img_projection(expdir, inv_mode='w', pti_mode=None)
+    #manipulator.set_real_img_projection(expdir, inv_mode='w', pti_mode='w')
+    manipulator.set_real_img_projection(expdir, inv_mode='w', pti_mode='s')
     breakpoint()

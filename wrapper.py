@@ -175,6 +175,7 @@ class PivotTuning:
         self.device = device
         self.G = G
         self.mode = mode
+        self.resolution = G.img_resolution
 
     def __call__(self, latent, target_pils):
         dataset = ImageLatentsDataset(
@@ -183,7 +184,8 @@ class PivotTuning:
             self.device,
             transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]),
+                transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])],),
+            self.resolution,
         )
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
         coach = MultiIDCoach(
